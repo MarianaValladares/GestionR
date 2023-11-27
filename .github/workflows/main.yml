@@ -1,0 +1,64 @@
+name: CI/CD Pipeline Mariana
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Aqui se van a ejecutar las pruebas en la rama main  
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Tests
+        run: npm test
+
+ # Aqui se va a generar el entorno de liberacion y se ejecutan las pruebas en el entorno de liberacion 
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Generate Release Environment
+        run: ./scripts/generate-release-environment.sh
+
+      - name: Run Tests in Release Environment
+        run: ./scripts/run-tests-in-release-environment.sh
+
+      - name: Create Release Artifact
+        run: ./scripts/create-release-artifact.sh
+
+  # Aqui se hace el despliegue del artefacto generado a produccion 
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: release
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Deploy to Production
+        run: ./scripts/deploy-to-production.sh
